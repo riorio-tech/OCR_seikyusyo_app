@@ -123,7 +123,7 @@ export default function Home() {
         });
       }
       setHighlightBoxes(boxes);
-    } catch (e: unknown) {
+    } catch {
       setInvoices([]);
       setHighlightBoxes([]);
     }
