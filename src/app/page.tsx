@@ -26,16 +26,7 @@ export default function Home() {
   const [highlightBoxes, setHighlightBoxes] = useState<Box[]>([]);
   const [base64Image, setBase64Image] = useState<string | null>(null);
   const [rawText, setRawText] = useState<string>("");
-  const [applicant, setApplicant] = useState<string>("-");
-  const [paymentDate, setPaymentDate] = useState<string>("-");
-  const [issuer, setIssuer] = useState<string>("-");
   const [loadingDots, setLoadingDots] = useState('');
-
-  // 仮のOCR結果データ
-  const mockExtract = () => [
-    { id: 1, date: "2024-06-01", amount: "¥12,000", to: "株式会社サンプル" },
-    { id: 2, date: "2024-06-02", amount: "¥8,000", to: "テスト合同会社" },
-  ];
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files && e.target.files[0]) {
@@ -91,9 +82,6 @@ export default function Home() {
       }
       const paymentDateMatch = text.match(/(\d{4}[\/\-年]\d{1,2}[\/\-月]\d{1,2}日?\s*\d{1,2}:\d{2})/); // 日時+時刻
       const issuerMatch = text.match(/(株式会社|有限会社|合同会社)[^\s\n]*/); // 請求元
-      setApplicant(applicantValue);
-      setPaymentDate(paymentDateMatch ? paymentDateMatch[0] : "-");
-      setIssuer(issuerMatch ? issuerMatch[0] : "-");
       setInvoices([
         {
           id: 1,
@@ -110,7 +98,7 @@ export default function Home() {
       // ハイライトは空に（Google OCRはバウンディングボックス情報が異なるため）
       setHighlightBoxes([]);
       // --- 追加: バウンディングボックス抽出 ---
-      let boxes: Box[] = [];
+      const boxes: Box[] = [];
       if (data.fullTextAnnotation && data.fullTextAnnotation.pages) {
         const targets: string[] = [];
         // 各抽出値をtargetsに
@@ -121,13 +109,12 @@ export default function Home() {
         if (paymentDateMatch?.[0]) targets.push(paymentDateMatch[0]);
         if (issuerMatch?.[0]) targets.push(issuerMatch[0]);
         // ページ内の全ワードを走査
-        data.fullTextAnnotation.pages.forEach((page: any) => {
-          page.blocks.forEach((block: any) => {
-            block.paragraphs.forEach((para: any) => {
-              para.words.forEach((word: any) => {
-                const wordText = word.symbols.map((s: any) => s.text).join('');
+        data.fullTextAnnotation.pages.forEach((page: { blocks: { paragraphs: { words: { symbols: { text: string }[]; boundingBox: { vertices: Vertex[] } }[] }[] }[] }) => {
+          page.blocks.forEach((block) => {
+            block.paragraphs.forEach((para) => {
+              para.words.forEach((word) => {
+                const wordText = word.symbols.map((s) => s.text).join('');
                 if (targets.some(t => wordText && t.includes(wordText))) {
-                  // vertices: [{x, y}, ...]
                   boxes.push(word.boundingBox.vertices);
                 }
               });
