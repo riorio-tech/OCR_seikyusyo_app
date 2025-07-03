@@ -5,13 +5,25 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 
+type Invoice = {
+  id: number;
+  date: string;
+  amount: string;
+  to: string;
+  applicant: string;
+  paymentDate: string;
+  issuer: string;
+};
+type Vertex = { x: number; y: number };
+type Box = Vertex[];
+
 export default function Home() {
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
-  const [invoices, setInvoices] = useState<any[]>([]);
+  const [invoices, setInvoices] = useState<Invoice[]>([]);
   const [loading, setLoading] = useState(false);
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
   const imageRef = useRef<HTMLImageElement>(null);
-  const [highlightBoxes, setHighlightBoxes] = useState<any[]>([]);
+  const [highlightBoxes, setHighlightBoxes] = useState<Box[]>([]);
   const [base64Image, setBase64Image] = useState<string | null>(null);
   const [rawText, setRawText] = useState<string>("");
   const [applicant, setApplicant] = useState<string>("-");
@@ -98,7 +110,7 @@ export default function Home() {
       // ハイライトは空に（Google OCRはバウンディングボックス情報が異なるため）
       setHighlightBoxes([]);
       // --- 追加: バウンディングボックス抽出 ---
-      let boxes: any[] = [];
+      let boxes: Box[] = [];
       if (data.fullTextAnnotation && data.fullTextAnnotation.pages) {
         const targets: string[] = [];
         // 各抽出値をtargetsに
@@ -124,7 +136,7 @@ export default function Home() {
         });
       }
       setHighlightBoxes(boxes);
-    } catch (e) {
+    } catch (e: unknown) {
       setInvoices([]);
       setHighlightBoxes([]);
     }

@@ -16,7 +16,7 @@ export async function POST(req: NextRequest) {
     });
     const text = result.fullTextAnnotation?.text || '';
     return NextResponse.json({ text });
-  } catch (e: any) {
+  } catch (e: unknown) {
     return NextResponse.json({ error: 'OCR failed', detail: String(e) }, { status: 500 });
   }
 } 
