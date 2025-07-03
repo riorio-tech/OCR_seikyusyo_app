@@ -45,7 +45,6 @@ export default function Home() {
   const handleExtract = async () => {
     if (!base64Image) return;
     setLoading(true);
-    setInvoices([]);
     setHighlightBoxes([]);
     try {
       // Google Cloud Vision API連携
@@ -129,7 +128,6 @@ export default function Home() {
         });
       });
     } catch {
-      setInvoices([]);
       setHighlightBoxes([]);
     }
     setLoading(false);
