@@ -94,35 +94,40 @@ export default function Home() {
         },
       ]);
       // ハイライト処理はそのまま
-      const targets = [dateMatch?.[0], amountMatches.map(m => (m as RegExpMatchArray)[0]), toMatch?.[0]].filter(Boolean);
+      // const targets = [dateMatch?.[0], amountMatches.map(m => (m as RegExpMatchArray)[0]), toMatch?.[0]].filter(Boolean);
       // ハイライトは空に（Google OCRはバウンディングボックス情報が異なるため）
       setHighlightBoxes([]);
       // --- 追加: バウンディングボックス抽出 ---
-      const boxes: Box[] = [];
-      if (data.fullTextAnnotation && data.fullTextAnnotation.pages) {
-        const targets: string[] = [];
-        // 各抽出値をtargetsに
-        if (dateMatch?.[0]) targets.push(dateMatch[0]);
-        if (amountMatches.length > 0) amountMatches.forEach(m => targets.push((m as RegExpMatchArray)[0]));
-        if (toMatch?.[0]) targets.push(toMatch[0]);
-        if (applicantValue) targets.push(applicantValue);
-        if (paymentDateMatch?.[0]) targets.push(paymentDateMatch[0]);
-        if (issuerMatch?.[0]) targets.push(issuerMatch[0]);
-        // ページ内の全ワードを走査
-        data.fullTextAnnotation.pages.forEach((page: { blocks: { paragraphs: { words: { symbols: { text: string }[]; boundingBox: { vertices: Vertex[] } }[] }[] }[] }) => {
-          page.blocks.forEach((block) => {
-            block.paragraphs.forEach((para) => {
-              para.words.forEach((word) => {
-                const wordText = word.symbols.map((s) => s.text).join('');
-                if (targets.some(t => wordText && t.includes(wordText))) {
-                  boxes.push(word.boundingBox.vertices);
-                }
-              });
+      const ocrTargets: string[] = [];
+      if (dateMatch?.[0]) ocrTargets.push(dateMatch[0]);
+      if (amountMatches.length > 0) amountMatches.forEach(m => ocrTargets.push((m as RegExpMatchArray)[0]));
+      if (toMatch?.[0]) ocrTargets.push(toMatch[0]);
+      if (applicantValue) ocrTargets.push(applicantValue);
+      if (paymentDateMatch?.[0]) ocrTargets.push(paymentDateMatch[0]);
+      if (issuerMatch?.[0]) ocrTargets.push(issuerMatch[0]);
+      // 各抽出値をtargetsに
+      // const targets: string[] = [];
+      // if (dateMatch?.[0]) targets.push(dateMatch[0]);
+      // if (amountMatches.length > 0) amountMatches.forEach(m => targets.push((m as RegExpMatchArray)[0]));
+      // if (toMatch?.[0]) targets.push(toMatch[0]);
+      // if (applicantValue) targets.push(applicantValue);
+      // if (paymentDateMatch?.[0]) targets.push(paymentDateMatch[0]);
+      // if (issuerMatch?.[0]) targets.push(issuerMatch[0]);
+      // ページ内の全ワードを走査
+      data.fullTextAnnotation.pages.forEach((page: { blocks: { paragraphs: { words: { symbols: { text: string }[]; boundingBox: { vertices: Vertex[] } }[] }[] }[] }) => {
+        page.blocks.forEach((block) => {
+          block.paragraphs.forEach((para) => {
+            para.words.forEach((word) => {
+              const wordText = word.symbols.map((s) => s.text).join('');
+              if (ocrTargets.some(t => wordText && t.includes(wordText))) {
+                const boxes: Box[] = [];
+                boxes.push(word.boundingBox.vertices);
+                setHighlightBoxes(boxes);
+              }
             });
           });
         });
-      }
-      setHighlightBoxes(boxes);
+      });
     } catch {
       setInvoices([]);
       setHighlightBoxes([]);
